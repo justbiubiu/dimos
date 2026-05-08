@@ -25,5 +25,10 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install system deps for audio wheels
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y portaudio19-dev
+
       - name: Verify
         run: bash ./scripts/verify.sh
