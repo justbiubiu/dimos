@@ -11,6 +11,7 @@ Usage examples:
     # 3) Voice control (requires microphone + whisper):
     # python examples/unitree_go2_text_voice_control.py --mode voice --whisper-model base
 """
+# ruff: noqa: I001
 
 from __future__ import annotations
 
