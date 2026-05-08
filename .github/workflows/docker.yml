@@ -81,7 +81,7 @@ jobs:
   # just a debugger
   inspect-needs:
     needs: [check-changes, ros]
-    runs-on: dimos-runner-ubuntu-2204
+    runs-on: ubuntu-latest
     if: always()
     steps:
       - run: |
