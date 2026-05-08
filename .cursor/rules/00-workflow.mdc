@@ -1,0 +1,27 @@
+---
+description: Enforce PR-first workflow with verify gate
+alwaysApply: true
+---
+
+# Workflow Guardrails
+
+## Required Flow
+
+1. Work on a non-protected branch.
+2. Implement only scoped changes for the request.
+3. Run `bash scripts/verify.sh` before proposing merge.
+4. Open PR with required sections: Summary, Test plan, Risk, Related.
+5. Merge only after CI is green.
+
+## Safety Rules
+
+- Never push directly to protected branches.
+- Never use `git push --force` unless explicitly requested by maintainer.
+- Never commit secrets or credentials.
+- Never modify `scripts/verify.sh` to weaken checks.
+
+## Review Priority
+
+- P0/P1: correctness, security, safety, and regressions first.
+- P2: maintainability and clarity improvements.
+- P3: style-only suggestions should not block merge.

@@ -383,3 +383,62 @@ CI asserts the file is current — if it's stale, CI fails.
 - CLI / dimos run: `docs/development/dimos_run.md`
 - LFS data: `docs/development/large_file_management.md`
 - Agent system: `docs/agents/`
+
+---
+
+## Agent Pipeline Rules
+
+### Definition Of Done
+
+- Code changes are on a feature branch and merged via PR.
+- Local verification passes with `bash scripts/verify.sh`.
+- CI runs the same `bash scripts/verify.sh`.
+- PR description includes Summary, Test plan, Risk, and Related.
+
+### Single Source Of Truth
+
+- The only required verification command is:
+
+```bash
+bash scripts/verify.sh
+```
+
+- Do not add separate verification logic in CI that diverges from this script.
+
+### Hard Safety Rules
+
+- Never push directly to protected branches.
+- Never use `git push --force` on shared branches.
+- Never bypass verification by weakening `scripts/verify.sh`.
+- Never commit secrets (`.env`, tokens, private keys, credentials).
+
+### PR Rules
+
+- PR title follows conventional style (`feat:`, `fix:`, `docs:`, `refactor:`, `chore:`).
+- PR body must include:
+  - Summary
+  - Test plan
+  - Risk
+  - Related
+
+### Role Split
+
+- Cursor local agent: implement code, run verify, create PR.
+- GitHub CI: execute `bash scripts/verify.sh` on pull requests.
+- Human reviewer: owns approval and merge policy decisions.
+
+### Codex Review Guidelines (P0-P3)
+
+- **P0 (blocker):**
+  - Secrets committed to repository.
+  - Dangerous branch operations (`--force` to protected branches).
+  - Safety-critical control regressions (missing limits/clamps in motion control path).
+  - Command/script injection or arbitrary code execution paths.
+- **P1 (must fix before merge):**
+  - Significant behavior changes without migration notes.
+  - Backward-incompatible API/CLI changes without explicit communication.
+  - Tests disabled or removed for touched critical paths.
+- **P2 (should fix):**
+  - Maintainability issues, duplicated logic, weak error handling.
+- **P3 (ignore by default):**
+  - Minor style/typo/nit that does not affect correctness or safety.

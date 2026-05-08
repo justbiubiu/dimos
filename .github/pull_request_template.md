@@ -1,29 +1,23 @@
-## Problem
+## Summary
 
-<!-- What feature are you adding, or what is broken/missing/sub-optimal? -->
-<!-- Context, symptoms, motivation. Link the issue. -->
+<!-- What changed and why -->
 
-Closes DIM-XXX
+## Test plan
 
-## Solution
+<!-- Reproducible local/CI verification steps -->
+<!-- Required: include `bash scripts/verify.sh` result -->
 
-<!-- What you changed and why this approach -->
-<!-- Key design decisions / tradeoffs -->
-<!-- Keep it high-signal; deep planning belongs in the issue. -->
+- [ ] `bash scripts/verify.sh`
 
-## Breaking Changes
+## Risk
 
-<!-- Write "None" if not applicable -->
+<!-- Behavior/safety/compatibility risks -->
+<!-- Write "Low" if minimal -->
 
-<!-- If applicable:
-- what breaks
-- who is affected
-- migration steps
--->
+## Related
 
-## How to Test
-
-<!-- MUST be reproducible. If this section is weak, reviewers can't approve confidently. -->
+<!-- Linked issue/PR/discussion -->
+<!-- Example: Closes DIM-XXX -->
 
 ## Contributor License Agreement
 
