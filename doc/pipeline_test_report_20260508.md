@@ -57,4 +57,3 @@ This report records the bootstrap status of the automated code-check pipeline on
 - [ ] PR merged to `main`.
 - [ ] Branch protection validated with non-empty required contexts.
 - [ ] End-to-end demo PR merged under protection.
-
