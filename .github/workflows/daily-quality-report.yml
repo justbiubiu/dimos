@@ -1,0 +1,113 @@
+# Nightly quality sweep: ruff (with safe auto-fix), mypy, pytest; artifact + issue on failure;
+# if checks pass and ruff produced changes only, open a PR, mark ready, enable auto-merge.
+name: daily-quality-report
+
+on:
+  schedule:
+    # 06:15 UTC daily — avoids exact hour CI spikes
+    - cron: "15 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: daily-quality-report-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install system deps for audio wheels
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y portaudio19-dev
+
+      - name: Sync dependencies
+        run: uv sync --all-extras --no-extra dds --frozen
+
+      - name: Run daily quality script
+        id: quality
+        continue-on-error: true
+        run: bash scripts/daily_quality_report.sh
+
+      - name: Upload report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-quality-report-${{ github.run_id }}
+          path: |
+            report/daily-quality.md
+          if-no-files-found: warn
+
+      - name: Open issue on failure
+        if: always() && steps.quality.outputs.checks_passed != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TITLE="[daily-quality] Failed $(date -u '+%Y-%m-%d') (run ${{ github.run_id }})"
+          BODY_FILE="$(mktemp)"
+          {
+            echo "Scheduled / manual **daily-quality-report** failed."
+            echo ""
+            echo "- Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo "- Ref: \`${{ github.ref_name }}\` @ \`${{ github.sha }}\`"
+            echo ""
+            echo "---"
+            echo ""
+            if [[ -f report/daily-quality.md ]]; then
+              cat report/daily-quality.md
+            else
+              echo "(report file missing)"
+            fi
+          } >"$BODY_FILE"
+          gh issue create --title "$TITLE" --body-file "$BODY_FILE"
+
+      - name: Commit ruff fixes and open PR with auto-merge
+        if: >-
+          steps.quality.outputs.checks_passed == 'true' &&
+          steps.quality.outputs.has_uncommitted_changes == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          BRANCH="bot/daily-quality-$(date -u +%Y%m%d)-${{ github.run_id }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add -u
+          git commit -m "chore(bot): daily ruff auto-fixes $(date -u +%Y-%m-%d)"
+          git push origin "$BRANCH"
+          gh pr create \
+            --draft \
+            --base "${{ github.event.repository.default_branch }}" \
+            --head "$BRANCH" \
+            --title "chore(bot): daily ruff auto-fixes $(date -u +%Y-%m-%d)" \
+            --body-file report/daily-quality.md
+          PR_NUMBER="$(gh pr list --head "$BRANCH" --json number --jq '.[0].number')"
+          gh pr ready "$PR_NUMBER"
+          gh pr merge "$PR_NUMBER" --auto --squash
+
+      - name: Mark workflow failed if sweep failed
+        if: always() && steps.quality.outputs.checks_passed != 'true'
+        run: exit 1
