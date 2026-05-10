@@ -27,7 +27,8 @@ uv run ruff check .
 echo "<<< OK"
 
 echo ">>> [4/4] Pytest fast suite"
-uv run pytest
+# CI=1 avoids interactive ``typer.confirm`` in ``configure_system`` during collection/run.
+CI=1 uv run pytest
 echo "<<< OK"
 
 echo "================================================================"
